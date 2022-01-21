@@ -103,6 +103,7 @@
     <ItemGroup>
         <Compile Include="*.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
+        <EmbeddedResource Include="res\*.js" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     

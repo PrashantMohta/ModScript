@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -10,6 +11,7 @@ using Jint.Runtime.Interop;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using HutongGames.PlayMaker;
 
 
 using Satchel;
@@ -19,37 +21,36 @@ namespace ModScript
     public  class ScriptManager 
     {
         internal static Engine JS;
-        private bool enabled = true;
+
+        public List<string> loadedScripts = new();
 
         public ScriptManager(){
+            var CUR_DIR = AssemblyUtils.getCurrentDirectory();
+            var DIR = Path.Combine(CUR_DIR,"Scripts");
+            if(!Directory.Exists(DIR)){
+                Directory.CreateDirectory(DIR);
+                File.WriteAllBytes(Path.Combine(CUR_DIR,"env.js"),AssemblyUtils.GetBytesFromResources("env.js"));
+                File.WriteAllBytes(Path.Combine(DIR,"example.js"),AssemblyUtils.GetBytesFromResources("example.js"));
+            }
             StartModScripts();
         }   
 
-        public void DisableHooks(){
-            enabled = false;
+
+        public void AddAssemblyTypeReferences(Assembly asm){
+            var AssemblyTypes = asm.GetTypes();
+            foreach(var type in AssemblyTypes){
+                JS.SetValue(type.ToString(), TypeReference.CreateTypeReference(JS, type)); // adds all types in assembly c# in JS 
+            }
         }
         public  void StartModScripts(){
             JS = new Engine(cfg => cfg.AllowClr(AppDomain.CurrentDomain.GetAssemblies()));    
-            JS.SetValue("HeroController", TypeReference.CreateTypeReference(JS, typeof(HeroController)));
-            LoadScripts("System");
+            AddAssemblyTypeReferences(Assembly.GetAssembly(typeof(HeroController))); //Assembly-CSharp
+            AddAssemblyTypeReferences(Assembly.GetAssembly(typeof(PlayMakerFSM)));  //Playmaker
             InitScript(Path.Combine(AssemblyUtils.getCurrentDirectory(),"env.js"));
             LoadScripts("Scripts");
-            var HeroUpdateHook = JS.GetValue("__HeroUpdateHook");
-            ModHooks.HeroUpdateHook += () => {
-                if(enabled && HeroUpdateHook.IsCallable()){
-                    JS.Invoke(HeroUpdateHook);
-                }
-            };
-            var activeSceneChanged = JS.GetValue("__activeSceneChanged");
-            UnityEngine.SceneManagement.SceneManager.activeSceneChanged += (Scene to,Scene from) => {
-                if(enabled && activeSceneChanged.IsCallable()){
-                    JS.Invoke(activeSceneChanged, to,from);
-                }
-            };
-            
         }
 
-        public  void LoadScripts(string path){
+        public void LoadScripts(string path){
             var DIR = Path.Combine(AssemblyUtils.getCurrentDirectory(),path);
             if(!Directory.Exists(DIR)){
                 Log($"Scripts Folder Does not exist at {DIR}");
@@ -73,6 +74,7 @@ namespace ModScript
                 Log($"No Such file : {path}");
                 return; 
             }
+            loadedScripts.Add(Path.GetFileName(path));
             var script = File.ReadAllText(path);
             JS.Execute(script);
         }

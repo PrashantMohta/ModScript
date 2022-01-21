@@ -14,7 +14,7 @@ using UnityEngine.SceneManagement;
 
 namespace ModScript
 {
-    public class ModScript:Mod 
+    public class ModScript:Mod,ICustomMenuMod
     {
         internal static ModScript Instance;
         internal ScriptManager scriptManager;
@@ -27,17 +27,11 @@ namespace ModScript
         public override void Initialize()
         {
             Instance = this;
-            ModHooks.HeroUpdateHook += HeroUpdate;
             scriptManager = new ScriptManager();
         }
-
-        internal void HeroUpdate()
-        {
-            if(Input.GetKeyDown(KeyCode.R)){
-                scriptManager.DisableHooks();
-                scriptManager = new ScriptManager();
-            }
+        public  bool ToggleButtonInsideMenu {get;}= true;
+        public MenuScreen GetMenuScreen(MenuScreen modListMenu,ModToggleDelegates? toggle){
+            return BetterMenu.GetMenu(modListMenu,toggle);
         }
-
     }
 }
