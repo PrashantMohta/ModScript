@@ -1,6 +1,6 @@
-ModScript
+## ModScript
 
-uses Jint interpretter to run scripts written in JavaScript with C# interop
+A Mod that uses [Jint](https://github.com/sebastienros/jint) interpretter to run scripts written in JavaScript with C# interop
 
 - All loaded Assemblies are shared with JS
 - All Types in Assembly-CSharp.dll & Playmaker.dll are exposed to JS (allows access to global types)
