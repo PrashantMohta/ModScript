@@ -43,7 +43,12 @@ namespace ModScript
             }
         }
         public  void StartModScripts(){
-            JS = new Engine(cfg => cfg.AllowClr(AppDomain.CurrentDomain.GetAssemblies()));    
+            JS = new Engine(
+                cfg => {
+                cfg.AllowClr(AppDomain.CurrentDomain.GetAssemblies());
+                cfg.CatchClrExceptions();
+                }
+            );    
             AddAssemblyTypeReferences(Assembly.GetAssembly(typeof(HeroController))); //Assembly-CSharp
             AddAssemblyTypeReferences(Assembly.GetAssembly(typeof(PlayMakerFSM)));  //Playmaker
             InitScript(Path.Combine(AssemblyUtils.getCurrentDirectory(),"env.js"));
